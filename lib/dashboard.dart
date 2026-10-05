@@ -5,9 +5,10 @@ import 'widgets/sidebar.dart';
 import 'pages/discover_page.dart';
 import 'pages/blood_bank_page.dart';
 import 'pages/find_donor_page.dart';
+import 'pages/chat_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/about_help_page.dart';
-import 'pages/profile_page.dart'; // <-- ADDED IMPORT
+import 'pages/profile_page.dart';
 
 class Dashboard extends StatefulWidget {
   final ThemeMode themeMode;
@@ -39,18 +40,24 @@ class _DashboardState extends State<Dashboard> {
         return const BloodBankPage();
 
       case 2:
-        return const FindDonorPage();
+        return FindDonorPage(
+          themeMode: widget.themeMode,
+          onThemeChanged: widget.onThemeChanged,
+        );
 
       case 3:
+        return ChatPage(isDark: isDark);
+
+      case 4:
         return SettingsPage(
           themeMode: widget.themeMode,
           onThemeChanged: widget.onThemeChanged,
         );
 
-      case 4:
-        return const AboutHelpPage();
+      case 5:
+        return AboutHelpPage(isDark: isDark);
 
-      case 5: // <-- ADDED PROFILE ROUTE
+      case 6:
         return ProfilePage(isDark: isDark);
 
       default:

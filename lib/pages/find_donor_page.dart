@@ -4,7 +4,14 @@ import 'donor_data_sidebar/slide_bar.dart';
 import 'donor_data_sidebar/map_view.dart';
 
 class FindDonorPage extends StatefulWidget {
-  const FindDonorPage({super.key});
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeChanged;
+
+  const FindDonorPage({
+    super.key,
+    required this.themeMode,
+    required this.onThemeChanged,
+  });
 
   @override
   State<FindDonorPage> createState() => FindDonorPageState();
@@ -79,6 +86,7 @@ class FindDonorPageState extends State<FindDonorPage> {
                 selectedBarangay: selectedBarangay,
                 selectedBloodType: selectedBloodType,
                 onBarangaySelected: _onBarangayTap,
+                themeMode: widget.themeMode,
               ),
             ),
           ),

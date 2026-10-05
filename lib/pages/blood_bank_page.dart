@@ -175,6 +175,148 @@ class _BloodBankPageState extends State<BloodBankPage> {
     }
   }
 
+  void _showRequestBloodDialog(BuildContext context, ThemeData theme) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Submit Blood Request'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Fill out the patient details below to broadcast an urgent request to compatible donors and local chapter staff.',
+                style: TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Patient Full Name',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Hospital Name & Ward',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Units Needed (e.g. 2 bags)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  isDense: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Blood request submitted successfully!')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Submit Request'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUnitDetailsDialog(BuildContext context, ThemeData theme, BloodUnit unit) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.verified_outlined, color: Colors.green, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Unit Details: ${unit.barcode}',
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('Blood Type / ABO:', unit.bloodType, theme),
+              _buildDetailRow('Product Component:', unit.product, theme),
+              _buildDetailRow('Current Status:', unit.status, theme),
+              _buildDetailRow('Storage Location:', unit.storageBay, theme),
+              _buildDetailRow('Expiration Countdown:', unit.timeLeft, theme),
+              const Divider(height: 24),
+              const Text(
+                'Safety & Compliance',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                '• Fully screened for transfusion-transmitted infections.\n• Cross-match testing required prior to hospital transfusion.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Unit ${unit.barcode} added to your request list.')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reserve / Select Unit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6))),
+          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -309,18 +451,18 @@ class _BloodBankPageState extends State<BloodBankPage> {
                     ],
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.download_outlined, size: 18),
-                  label: const Text('Export Stock'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.onSurface,
-                    side: BorderSide(
-                      color: theme.dividerColor.withOpacity(0.3),
-                    ),
+                ElevatedButton.icon(
+                  onPressed: () => _showRequestBloodDialog(context, theme),
+                  icon: const Icon(Icons.sos, size: 18),
+                  label: const Text('Request Blood'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE53935),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   ),
                 ),
               ],
@@ -566,7 +708,7 @@ class _BloodBankPageState extends State<BloodBankPage> {
                         DataCell(_buildStatusBadge(unit.status)),
                         DataCell(
                           InkWell(
-                            onTap: () {},
+                            onTap: () => _showUnitDetailsDialog(context, theme, unit),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -574,16 +716,15 @@ class _BloodBankPageState extends State<BloodBankPage> {
                                   'Inspect',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 Icon(
                                   Icons.arrow_forward,
                                   size: 14,
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
+                                  color: theme.colorScheme.primary,
                                 ),
                               ],
                             ),

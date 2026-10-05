@@ -23,22 +23,23 @@ class _TabangSidebarState extends State<TabangSidebar> {
   final String userEmail = "briones.iverson@guest.com";
   final String userInitials = "IB";
 
+  // Navigation Items (Indices 0 to 4)
   static const List<String> menuItems = [
     'Discover',
     'Blood Bank\nInventory',
     'Find Donor',
+    'Chat',
     'Settings',
     'About & Help',
-    'Profile',
   ];
 
   static const List<IconData> menuIcons = [
     Icons.explore_outlined,
     Icons.bloodtype_outlined,
     Icons.location_on_outlined,
+    Icons.chat_bubble_outline_rounded,
     Icons.settings_outlined,
     Icons.info_outline,
-    Icons.person_outline,
   ];
 
   @override
@@ -95,13 +96,12 @@ class _TabangSidebarState extends State<TabangSidebar> {
       child: Column(
         children: [
           // ==================================================
-          // HEADER
+          // HEADER / LOGO
           // ==================================================
           SizedBox(
             height: 70,
             child: Row(
               children: [
-                // LOGO
                 SizedBox(
                   width: 70,
                   child: Center(
@@ -120,8 +120,6 @@ class _TabangSidebarState extends State<TabangSidebar> {
                     ),
                   ),
                 ),
-
-                // BRAND
                 if (showText)
                   Expanded(
                     child: Text(
@@ -141,7 +139,7 @@ class _TabangSidebarState extends State<TabangSidebar> {
           ),
 
           // ==================================================
-          // MENU LIST
+          // NAVIGATION MENU LIST
           // ==================================================
           Expanded(
             child: ListView.builder(
@@ -167,7 +165,6 @@ class _TabangSidebarState extends State<TabangSidebar> {
                     ),
                     child: Row(
                       children: [
-                        // ICON
                         SizedBox(
                           width: 70,
                           child: Center(
@@ -178,8 +175,6 @@ class _TabangSidebarState extends State<TabangSidebar> {
                             ),
                           ),
                         ),
-
-                        // TEXT
                         if (showText)
                           Expanded(
                             child: Text(
@@ -203,12 +198,12 @@ class _TabangSidebarState extends State<TabangSidebar> {
           ),
 
           // ==================================================
-          // BOTTOM PROFILE TILE
+          // BOTTOM PROFILE TILE (INDEX 6 / PROFILE)
           // ==================================================
           Padding(
             padding: EdgeInsets.all(widget.isExpanded ? 10.0 : 6.0),
             child: GestureDetector(
-              onTap: () => widget.onItemSelected(5), // Navigates to Profile (Index 5)
+              onTap: () => widget.onItemSelected(6), // Index 6 for Profile
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 height: 50,
@@ -217,7 +212,7 @@ class _TabangSidebarState extends State<TabangSidebar> {
                   color: isDark ? const Color(0xFF292929) : Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: widget.selectedIndex == 5
+                    color: widget.selectedIndex == 6
                         ? const Color(0xFFD32F2F)
                         : (isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0)),
                     width: 1,
@@ -225,7 +220,6 @@ class _TabangSidebarState extends State<TabangSidebar> {
                 ),
                 child: Row(
                   children: [
-                    // AVATAR CIRCLE
                     Container(
                       width: 34,
                       height: 34,
@@ -244,8 +238,6 @@ class _TabangSidebarState extends State<TabangSidebar> {
                         ),
                       ),
                     ),
-
-                    // USER INFO
                     if (showText) ...[
                       const SizedBox(width: 10),
                       Expanded(

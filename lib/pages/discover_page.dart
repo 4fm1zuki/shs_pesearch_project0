@@ -35,6 +35,11 @@ class _BloodDonationDiscoverPageState
   // Active Selected Category
   ContentCategory _selectedCategory = ContentCategory.explore;
 
+  // Search & Notification States
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   // Static Data List
   final List<ContentItem> _allContent = [
     // EXPLORE / HERO
@@ -149,14 +154,28 @@ class _BloodDonationDiscoverPageState
   ];
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final filteredItems = _selectedCategory == ContentCategory.explore
+    // Filter items based on active category and live search query
+    List<ContentItem> filteredItems = _selectedCategory == ContentCategory.explore
         ? _allContent
-        : _allContent
-        .where((item) => item.category == _selectedCategory)
-        .toList();
+        : _allContent.where((item) => item.category == _selectedCategory).toList();
+
+    if (_searchQuery.trim().isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filteredItems = _allContent.where((item) {
+        return item.title.toLowerCase().contains(query) ||
+            item.subtitle.toLowerCase().contains(query) ||
+            item.tag.toLowerCase().contains(query);
+      }).toList();
+    }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -169,7 +188,13 @@ class _BloodDonationDiscoverPageState
               _buildHeader(theme),
               const SizedBox(height: 28),
 
-              if (_selectedCategory == ContentCategory.explore) ...[
+              if (_searchQuery.trim().isNotEmpty) ...[
+                _buildSectionTitle('Search Results for "$_searchQuery"', theme),
+                const SizedBox(height: 16),
+                filteredItems.isEmpty
+                    ? Text('No results found.', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6)))
+                    : _buildCardsGrid(filteredItems, theme),
+              ] else if (_selectedCategory == ContentCategory.explore) ...[
                 _buildHeroCard(_allContent.first, theme),
                 const SizedBox(height: 36),
                 _buildSectionTitle('Featured Updates', theme),
@@ -198,29 +223,109 @@ class _BloodDonationDiscoverPageState
 
     return Row(
       children: [
-        // Top-left area left blank
         const SizedBox.shrink(),
-
         const Spacer(),
 
-        // Category Navigation Tabs
-        Row(
-          children: [
-            _navButton('EXPLORE', ContentCategory.explore, theme),
-            _navButton('DONATION TIPS', ContentCategory.tips, theme),
-            _navButton('ELIGIBILITY', ContentCategory.eligibility, theme),
-            _navButton('BLOOD DRIVES', ContentCategory.drives, theme),
-            _navButton('STORIES', ContentCategory.stories, theme),
-          ],
-        ),
+        // Category Navigation Tabs (Hidden if user is actively searching to keep header clean)
+        if (!_isSearching) ...[
+          Row(
+            children: [
+              _navButton('EXPLORE', ContentCategory.explore, theme),
+              _navButton('DONATION TIPS', ContentCategory.tips, theme),
+              _navButton('ELIGIBILITY', ContentCategory.eligibility, theme),
+              _navButton('BLOOD DRIVES', ContentCategory.drives, theme),
+              _navButton('STORIES', ContentCategory.stories, theme),
+            ],
+          ),
+          const Spacer(),
+        ],
 
-        const Spacer(),
-
-        IconButton(
-          icon: Icon(Icons.search, size: 20, color: theme.colorScheme.onSurface),
-          onPressed: () {},
+        // Expandable Search Bar Widget
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: _isSearching ? 300 : 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: _isSearching ? theme.cardColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: _isSearching ? Border.all(color: theme.dividerColor.withOpacity(0.2)) : null,
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isSearching ? Icons.close : Icons.search,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = !_isSearching;
+                    if (!_isSearching) {
+                      _searchQuery = '';
+                      _searchController.clear();
+                    }
+                  });
+                },
+              ),
+              if (_isSearching)
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Search updates, tips, drives...',
+                      hintStyle: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
         const SizedBox(width: 8),
+
+        // Notification Button with a Badge Counter
+        Stack(
+          children: [
+            IconButton(
+              icon: Icon(Icons.notifications_outlined, size: 20, color: theme.colorScheme.onSurface),
+              onPressed: () {
+                // Action for notifications
+              },
+            ),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  shape: BoxShape.circle,
+                ),
+                child: const Text(
+                  '2',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 12),
+
+        // Donate Now Action Button
         ElevatedButton.icon(
           onPressed: () {},
           icon: const Icon(Icons.favorite, size: 16),
@@ -250,6 +355,9 @@ class _BloodDonationDiscoverPageState
         onPressed: () {
           setState(() {
             _selectedCategory = category;
+            _searchQuery = '';
+            _searchController.clear();
+            _isSearching = false;
           });
         },
         child: Text(
@@ -358,7 +466,7 @@ class _BloodDonationDiscoverPageState
         border: Border.all(color: borderColor),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: SystemMouseCursors.text == SystemMouseCursors.text ? CrossAxisAlignment.start : CrossAxisAlignment.start,
         children: [
           ClipRRect(
             borderRadius:
