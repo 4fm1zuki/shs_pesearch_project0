@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class ChatPage extends StatefulWidget {
   final bool isDark;
+  final String? initialContactName;
 
-  const ChatPage({super.key, required this.isDark});
+  const ChatPage({super.key, required this.isDark, this.initialContactName});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -11,10 +12,53 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   int _selectedChatIndex = 0;
+  bool _showConversation = false;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
 
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectInitialContact(widget.initialContactName);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialContactName != widget.initialContactName) {
+      _selectInitialContact(widget.initialContactName);
+    }
+  }
+
+  void _selectInitialContact(String? name) {
+    if (name != null && name.isNotEmpty) {
+      final existingIndex = _chats.indexWhere((chat) => chat['name'] == name);
+      if (existingIndex >= 0) {
+        _selectedChatIndex = existingIndex;
+      } else {
+        _chats.add({
+          'id': name.replaceAll(RegExp(r'[^A-Za-z0-9]'), ''),
+          'name': name,
+          'initials': name
+              .split(' ')
+              .map((part) => part.isEmpty ? '' : part[0])
+              .take(2)
+              .join(),
+          'lastDonation': 'Not provided',
+          'totalDonations': 0,
+          'status': 'Donor',
+          'location': 'Digos City',
+          'isBlocked': false,
+          'unblockedAt': null,
+          'messages': <Map<String, String>>[],
+        });
+        _selectedChatIndex = _chats.length - 1;
+      }
+      _showConversation = true;
+    }
+  }
 
   final List<Map<String, dynamic>> _chats = [
     {
@@ -28,9 +72,22 @@ class _ChatPageState extends State<ChatPage> {
       'isBlocked': false,
       'unblockedAt': null, // DateTime timestamp when unblocked
       'messages': [
-        {'sender': 'them', 'text': 'Hello! I saw your urgent request for blood.', 'time': '17:28'},
-        {'sender': 'me', 'text': 'Hi! Yes, we are currently looking for a donor at Digos Medical Center.', 'time': '17:29'},
-        {'sender': 'them', 'text': 'I am available for donation tomorrow morning.', 'time': '17:30'},
+        {
+          'sender': 'them',
+          'text': 'Hello! I saw your urgent request for blood.',
+          'time': '17:28'
+        },
+        {
+          'sender': 'me',
+          'text':
+              'Hi! Yes, we are currently looking for a donor at Digos Medical Center.',
+          'time': '17:29'
+        },
+        {
+          'sender': 'them',
+          'text': 'I am available for donation tomorrow morning.',
+          'time': '17:30'
+        },
       ],
     },
     {
@@ -44,7 +101,11 @@ class _ChatPageState extends State<ChatPage> {
       'isBlocked': false,
       'unblockedAt': null,
       'messages': [
-        {'sender': 'them', 'text': 'Thank you so much for responding to the request!', 'time': '16:45'},
+        {
+          'sender': 'them',
+          'text': 'Thank you so much for responding to the request!',
+          'time': '16:45'
+        },
       ],
     },
     {
@@ -58,7 +119,11 @@ class _ChatPageState extends State<ChatPage> {
       'isBlocked': false,
       'unblockedAt': null,
       'messages': [
-        {'sender': 'them', 'text': 'What hospital are you currently located at?', 'time': '15:20'},
+        {
+          'sender': 'them',
+          'text': 'What hospital are you currently located at?',
+          'time': '15:20'
+        },
       ],
     },
   ];
@@ -78,7 +143,8 @@ class _ChatPageState extends State<ChatPage> {
     if (activeChat['isBlocked'] == true) return;
 
     final now = TimeOfDay.now();
-    final formattedTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final formattedTime =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     setState(() {
       (activeChat['messages'] as List).add({
@@ -163,7 +229,8 @@ class _ChatPageState extends State<ChatPage> {
           builder: (context, setModalState) {
             final isOtherSelected = selectedReason == 'Other';
             final canSubmit = selectedReason != null &&
-                (!isOtherSelected || otherReasonController.text.trim().isNotEmpty);
+                (!isOtherSelected ||
+                    otherReasonController.text.trim().isNotEmpty);
 
             return AlertDialog(
               title: const Text('Report User'),
@@ -175,16 +242,17 @@ class _ChatPageState extends State<ChatPage> {
                     Text('Select a reason for reporting ${user['name']}:'),
                     const SizedBox(height: 12),
                     ...reasons.map((reason) => RadioListTile<String>(
-                      title: Text(reason, style: const TextStyle(fontSize: 13)),
-                      value: reason,
-                      groupValue: selectedReason,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (val) {
-                        setModalState(() {
-                          selectedReason = val;
-                        });
-                      },
-                    )),
+                          title: Text(reason,
+                              style: const TextStyle(fontSize: 13)),
+                          value: reason,
+                          groupValue: selectedReason,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (val) {
+                            setModalState(() {
+                              selectedReason = val;
+                            });
+                          },
+                        )),
                     if (isOtherSelected) ...[
                       const SizedBox(height: 8),
                       TextField(
@@ -215,37 +283,42 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   onPressed: canSubmit
                       ? () {
-                    // "Are you sure?" confirmation dialog
-                    showDialog(
-                      context: context,
-                      builder: (confirmContext) {
-                        return AlertDialog(
-                          title: const Text('Confirm Report'),
-                          content: Text('Are you sure you want to submit this report against ${user['name']}?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(confirmContext),
-                              child: const Text('Cancel'),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFD32F2F),
-                                foregroundColor: Colors.white,
-                              ),
-                              onPressed: () {
-                                Navigator.pop(confirmContext);
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Report submitted for ${user['name']}.')),
-                                );
-                              },
-                              child: const Text('Yes, Report'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  }
+                          // "Are you sure?" confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (confirmContext) {
+                              return AlertDialog(
+                                title: const Text('Confirm Report'),
+                                content: Text(
+                                    'Are you sure you want to submit this report against ${user['name']}?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(confirmContext),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFD32F2F),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(confirmContext);
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Report submitted for ${user['name']}.')),
+                                      );
+                                    },
+                                    child: const Text('Yes, Report'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
                       : null,
                   child: const Text('Next'),
                 ),
@@ -260,7 +333,8 @@ class _ChatPageState extends State<ChatPage> {
   void _showProfileModal(BuildContext context, Map<String, dynamic> user) {
     final cardBg = widget.isDark ? const Color(0xFF242424) : Colors.white;
     final textColor = widget.isDark ? Colors.white : Colors.black87;
-    final borderColor = widget.isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0);
+    final borderColor =
+        widget.isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0);
 
     showModalBottomSheet(
       context: context,
@@ -353,14 +427,19 @@ class _ChatPageState extends State<ChatPage> {
                   border: Border.all(color: borderColor),
                 ),
                 child: ListTile(
-                  leading: Icon(Icons.location_on_outlined, color: textColor.withOpacity(0.7)),
+                  leading: Icon(Icons.location_on_outlined,
+                      color: textColor.withOpacity(0.7)),
                   title: Text(
                     'Barangay / Location',
-                    style: TextStyle(fontSize: 11, color: textColor.withOpacity(0.55)),
+                    style: TextStyle(
+                        fontSize: 11, color: textColor.withOpacity(0.55)),
                   ),
                   subtitle: Text(
                     '${user['location']}',
-                    style: TextStyle(fontSize: 13, color: textColor, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: textColor,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
@@ -391,7 +470,8 @@ class _ChatPageState extends State<ChatPage> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
           ),
           const SizedBox(height: 2),
           Text(
@@ -406,15 +486,20 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 760;
     final textColor = theme.colorScheme.onSurface;
     final cardBg = widget.isDark ? const Color(0xFF242424) : Colors.white;
-    final listBg = widget.isDark ? const Color(0xFF1C1C1C) : const Color(0xFFF7F7F7);
-    final borderColor = widget.isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0);
-    final selectedTileBg = widget.isDark ? const Color(0xFF2D2D2D) : const Color(0xFFEBEBEB);
+    final listBg =
+        widget.isDark ? const Color(0xFF1C1C1C) : const Color(0xFFF7F7F7);
+    final borderColor =
+        widget.isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0);
+    final selectedTileBg =
+        widget.isDark ? const Color(0xFF2D2D2D) : const Color(0xFFEBEBEB);
 
     final filteredChats = _chats.where((chat) {
       final query = _searchQuery.toLowerCase();
-      final nameMatches = (chat['name'] as String).toLowerCase().contains(query);
+      final nameMatches =
+          (chat['name'] as String).toLowerCase().contains(query);
       final idMatches = (chat['id'] as String).toLowerCase().contains(query);
       return nameMatches || idMatches;
     }).toList();
@@ -430,388 +515,459 @@ class _ChatPageState extends State<ChatPage> {
       body: Row(
         children: [
           // Sidebar
-          Container(
-            width: 320,
-            decoration: BoxDecoration(
-              color: listBg,
-              border: Border(right: BorderSide(color: borderColor)),
-            ),
-            child: Column(
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(fontSize: 13, color: textColor),
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search donor/recipient ID...',
-                        hintStyle: TextStyle(color: textColor.withOpacity(0.5), fontSize: 13),
-                        border: InputBorder.none,
-                        icon: Icon(Icons.search, size: 18, color: textColor.withOpacity(0.6)),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? GestureDetector(
-                          onTap: () {
+          if (!isCompact || !_showConversation)
+            SizedBox(
+              width: isCompact ? MediaQuery.sizeOf(context).width : 320,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: listBg,
+                  border: Border(right: BorderSide(color: borderColor)),
+                ),
+                child: Column(
+                  children: [
+                    // Search Bar
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          style: TextStyle(fontSize: 13, color: textColor),
+                          onChanged: (val) {
                             setState(() {
-                              _searchController.clear();
-                              _searchQuery = '';
+                              _searchQuery = val;
                             });
                           },
-                          child: Icon(Icons.clear, size: 16, color: textColor.withOpacity(0.6)),
-                        )
-                            : null,
+                          decoration: InputDecoration(
+                            hintText: 'Search donor/recipient ID...',
+                            hintStyle: TextStyle(
+                                color: textColor.withOpacity(0.5),
+                                fontSize: 13),
+                            border: InputBorder.none,
+                            icon: Icon(Icons.search,
+                                size: 18, color: textColor.withOpacity(0.6)),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _searchController.clear();
+                                        _searchQuery = '';
+                                      });
+                                    },
+                                    child: Icon(Icons.clear,
+                                        size: 16,
+                                        color: textColor.withOpacity(0.6)),
+                                  )
+                                : null,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                // Chat List
-                Expanded(
-                  child: filteredChats.isEmpty
-                      ? Center(
-                    child: Text(
-                      'No chats found',
-                      style: TextStyle(color: textColor.withOpacity(0.5), fontSize: 13),
-                    ),
-                  )
-                      : ListView.builder(
-                    itemCount: filteredChats.length,
-                    itemBuilder: (context, index) {
-                      final chat = filteredChats[index];
-                      final originalIndex = _chats.indexOf(chat);
-                      final isSelected = originalIndex == _selectedChatIndex;
-                      final chatMsgs = chat['messages'] as List;
-                      final recentMsg = chatMsgs.isNotEmpty ? chatMsgs.last : null;
+                    // Chat List
+                    Expanded(
+                      child: filteredChats.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No chats found',
+                                style: TextStyle(
+                                    color: textColor.withOpacity(0.5),
+                                    fontSize: 13),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: filteredChats.length,
+                              itemBuilder: (context, index) {
+                                final chat = filteredChats[index];
+                                final originalIndex = _chats.indexOf(chat);
+                                final isSelected =
+                                    originalIndex == _selectedChatIndex;
+                                final chatMsgs = chat['messages'] as List;
+                                final recentMsg =
+                                    chatMsgs.isNotEmpty ? chatMsgs.last : null;
 
-                      return InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedChatIndex = originalIndex;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected ? selectedTileBg : Colors.transparent,
-                            border: Border(
-                              bottom: BorderSide(color: borderColor.withOpacity(0.5), width: 0.5),
+                                return InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedChatIndex = originalIndex;
+                                      _showConversation = true;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? selectedTileBg
+                                          : Colors.transparent,
+                                      border: Border(
+                                        bottom: BorderSide(
+                                            color: borderColor.withOpacity(0.5),
+                                            width: 0.5),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF4A1212),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              chat['initials']!,
+                                              style: const TextStyle(
+                                                color: Color(0xFFD32F2F),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                chat['name']!,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: textColor,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                recentMsg != null
+                                                    ? recentMsg['text']
+                                                    : '',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: textColor
+                                                      .withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (recentMsg != null)
+                                          Text(
+                                            recentMsg['time'],
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color:
+                                                  textColor.withOpacity(0.45),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Main Chat Area
+          if (!isCompact || _showConversation)
+            Expanded(
+              child: activeChat == null
+                  ? Center(
+                      child: Text(
+                        'Select a conversation to start messaging',
+                        style: TextStyle(color: textColor.withOpacity(0.5)),
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        // Header
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            border:
+                                Border(bottom: BorderSide(color: borderColor)),
                           ),
                           child: Row(
                             children: [
+                              if (isCompact)
+                                IconButton(
+                                  tooltip: 'Back to conversations',
+                                  onPressed: () =>
+                                      setState(() => _showConversation = false),
+                                  icon: const Icon(Icons.arrow_back),
+                                ),
                               Container(
-                                width: 44,
-                                height: 44,
+                                width: 40,
+                                height: 40,
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF4A1212),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Text(
-                                    chat['initials']!,
+                                    activeChat['initials']!,
                                     style: const TextStyle(
                                       color: Color(0xFFD32F2F),
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 13,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      chat['name']!,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: textColor,
-                                      ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    activeChat['name']!,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      recentMsg != null ? recentMsg['text'] : '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: textColor.withOpacity(0.6),
-                                      ),
+                                  ),
+                                  Text(
+                                    isBlocked ? 'Blocked' : 'Online',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isBlocked
+                                          ? Colors.red
+                                          : Colors.green.shade400,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              if (recentMsg != null)
-                                Text(
-                                  recentMsg['time'],
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: textColor.withOpacity(0.45),
                                   ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Main Chat Area
-          Expanded(
-            child: activeChat == null
-                ? Center(
-              child: Text(
-                'Select a conversation to start messaging',
-                style: TextStyle(color: textColor.withOpacity(0.5)),
-              ),
-            )
-                : Column(
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    border: Border(bottom: BorderSide(color: borderColor)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4A1212),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            activeChat['initials']!,
-                            style: const TextStyle(
-                              color: Color(0xFFD32F2F),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            activeChat['name']!,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: textColor,
-                            ),
-                          ),
-                          Text(
-                            isBlocked ? 'Blocked' : 'Online',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isBlocked ? Colors.red : Colors.green.shade400,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.phone_outlined, size: 20),
-                        color: textColor.withOpacity(0.7),
-                        onPressed: () {},
-                      ),
-
-                      // Popup Menu Options
-                      PopupMenuButton<String>(
-                        icon: Icon(Icons.more_vert, size: 20, color: textColor.withOpacity(0.7)),
-                        color: cardBg,
-                        onSelected: (value) {
-                          if (value == 'Profile') {
-                            _showProfileModal(context, activeChat);
-                          } else if (value == 'Block' || value == 'Unblock') {
-                            _toggleBlockStatus(activeChat);
-                          } else if (value == 'Report') {
-                            _showReportDialog(context, activeChat);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'Profile',
-                            child: Row(
-                              children: [
-                                Icon(Icons.person_outline, size: 18, color: textColor),
-                                const SizedBox(width: 10),
-                                Text('Profile', style: TextStyle(color: textColor, fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: isBlocked ? 'Unblock' : 'Block',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isBlocked ? Icons.check_circle_outline : Icons.block_outlined,
-                                  size: 18,
-                                  color: textColor,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  isBlocked ? 'Unblock' : 'Block',
-                                  style: TextStyle(color: textColor, fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'Report',
-                            child: Row(
-                              children: [
-                                Icon(Icons.flag_outlined, size: 18, color: textColor),
-                                const SizedBox(width: 10),
-                                Text('Report', style: TextStyle(color: textColor, fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Messages List
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = messages[index];
-                      final isMe = msg['sender'] == 'me';
-
-                      return Align(
-                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          constraints: const BoxConstraints(maxWidth: 380),
-                          decoration: BoxDecoration(
-                            color: isMe ? const Color(0xFFD32F2F) : cardBg,
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(16),
-                              topRight: const Radius.circular(16),
-                              bottomLeft: Radius.circular(isMe ? 16 : 4),
-                              bottomRight: Radius.circular(isMe ? 4 : 16),
-                            ),
-                            border: isMe ? null : Border.all(color: borderColor),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                msg['text']!,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: isMe ? Colors.white : textColor,
-                                ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: Text(
-                                  msg['time']!,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: isMe
-                                        ? Colors.white.withOpacity(0.7)
-                                        : textColor.withOpacity(0.45),
+                              const Spacer(),
+                              IconButton(
+                                icon:
+                                    const Icon(Icons.phone_outlined, size: 20),
+                                color: textColor.withOpacity(0.7),
+                                onPressed: () {},
+                              ),
+
+                              // Popup Menu Options
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert,
+                                    size: 20,
+                                    color: textColor.withOpacity(0.7)),
+                                color: cardBg,
+                                onSelected: (value) {
+                                  if (value == 'Profile') {
+                                    _showProfileModal(context, activeChat);
+                                  } else if (value == 'Block' ||
+                                      value == 'Unblock') {
+                                    _toggleBlockStatus(activeChat);
+                                  } else if (value == 'Report') {
+                                    _showReportDialog(context, activeChat);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'Profile',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.person_outline,
+                                            size: 18, color: textColor),
+                                        const SizedBox(width: 10),
+                                        Text('Profile',
+                                            style: TextStyle(
+                                                color: textColor,
+                                                fontSize: 13)),
+                                      ],
+                                    ),
                                   ),
-                                ),
+                                  PopupMenuItem(
+                                    value: isBlocked ? 'Unblock' : 'Block',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          isBlocked
+                                              ? Icons.check_circle_outline
+                                              : Icons.block_outlined,
+                                          size: 18,
+                                          color: textColor,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          isBlocked ? 'Unblock' : 'Block',
+                                          style: TextStyle(
+                                              color: textColor, fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'Report',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.flag_outlined,
+                                            size: 18, color: textColor),
+                                        const SizedBox(width: 10),
+                                        Text('Report',
+                                            style: TextStyle(
+                                                color: textColor,
+                                                fontSize: 13)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
 
-                // Message Input Bar or Block Banner
-                if (isBlocked)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    color: cardBg,
-                    child: Center(
-                      child: Text(
-                        'You have blocked ${activeChat['name']}. You cannot send or receive messages.',
-                        style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 12),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      border: Border(top: BorderSide(color: borderColor)),
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.mic_none_outlined, size: 20),
-                          color: textColor.withOpacity(0.6),
-                          onPressed: () {},
-                        ),
+                        // Messages List
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: listBg,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: borderColor),
-                            ),
-                            child: TextField(
-                              controller: _messageController,
-                              style: TextStyle(fontSize: 13, color: textColor),
-                              onSubmitted: (_) => _sendMessage(),
-                              decoration: InputDecoration(
-                                hintText: 'Type a message...',
-                                hintStyle: TextStyle(color: textColor.withOpacity(0.4), fontSize: 13),
-                                border: InputBorder.none,
-                              ),
-                            ),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(20),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              final msg = messages[index];
+                              final isMe = msg['sender'] == 'me';
+
+                              return Align(
+                                alignment: isMe
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 380),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isMe ? const Color(0xFFD32F2F) : cardBg,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(16),
+                                      topRight: const Radius.circular(16),
+                                      bottomLeft:
+                                          Radius.circular(isMe ? 16 : 4),
+                                      bottomRight:
+                                          Radius.circular(isMe ? 4 : 16),
+                                    ),
+                                    border: isMe
+                                        ? null
+                                        : Border.all(color: borderColor),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        msg['text']!,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color:
+                                              isMe ? Colors.white : textColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Text(
+                                          msg['time']!,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: isMe
+                                                ? Colors.white.withOpacity(0.7)
+                                                : textColor.withOpacity(0.45),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.send_rounded, size: 20),
-                          color: const Color(0xFFD32F2F),
-                          onPressed: _sendMessage,
-                        ),
+
+                        // Message Input Bar or Block Banner
+                        if (isBlocked)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            color: cardBg,
+                            child: Center(
+                              child: Text(
+                                'You have blocked ${activeChat['name']}. You cannot send or receive messages.',
+                                style: TextStyle(
+                                    color: textColor.withOpacity(0.6),
+                                    fontSize: 12),
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              border:
+                                  Border(top: BorderSide(color: borderColor)),
+                            ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.mic_none_outlined,
+                                      size: 20),
+                                  color: textColor.withOpacity(0.6),
+                                  onPressed: () {},
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      color: listBg,
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(color: borderColor),
+                                    ),
+                                    child: TextField(
+                                      controller: _messageController,
+                                      style: TextStyle(
+                                          fontSize: 13, color: textColor),
+                                      onSubmitted: (_) => _sendMessage(),
+                                      decoration: InputDecoration(
+                                        hintText: 'Type a message...',
+                                        hintStyle: TextStyle(
+                                            color: textColor.withOpacity(0.4),
+                                            fontSize: 13),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon:
+                                      const Icon(Icons.send_rounded, size: 20),
+                                  color: const Color(0xFFD32F2F),
+                                  onPressed: _sendMessage,
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
-                  ),
-              ],
             ),
-          ),
         ],
       ),
     );

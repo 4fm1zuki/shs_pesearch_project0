@@ -24,11 +24,13 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
       'faqs': [
         {
           'q': 'How do I register as a blood donor on TABANG?',
-          'a': 'Sign up using your basic contact details, select your blood type, and verify your location. Your profile will then be ready to accept emergency blood requests.'
+          'a':
+              'Sign up using your basic contact details, select your blood type, and verify your location. Your profile will then be ready to accept emergency blood requests.'
         },
         {
           'q': 'Is TABANG completely free to use?',
-          'a': 'Yes. TABANG strictly prohibits any sale or monetization of blood. All donations connected through the platform are voluntary and non-remunerated.'
+          'a':
+              'Yes. TABANG strictly prohibits any sale or monetization of blood. All donations connected through the platform are voluntary and non-remunerated.'
         },
       ]
     },
@@ -38,11 +40,13 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
       'faqs': [
         {
           'q': 'Who is eligible to donate blood?',
-          'a': 'Donors must be at least 18 years old, weigh at least 50 kg (110 lbs), be in good general health, and pass standard pre-donation screening.'
+          'a':
+              'Donors must be at least 18 years old, weigh at least 50 kg (110 lbs), be in good general health, and pass standard pre-donation screening.'
         },
         {
           'q': 'How often can I donate blood?',
-          'a': 'You can donate whole blood every 12 weeks (3 months). Platelet donors can donate more frequently depending on medical guidelines.'
+          'a':
+              'You can donate whole blood every 12 weeks (3 months). Platelet donors can donate more frequently depending on medical guidelines.'
         },
       ]
     },
@@ -52,11 +56,13 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
       'faqs': [
         {
           'q': 'How do urgent blood request notifications work?',
-          'a': 'When a recipient posts an urgent request, TABANG matches compatible blood types within proximity and sends real-time push alerts to eligible donors.'
+          'a':
+              'When a recipient posts an urgent request, TABANG matches compatible blood types within proximity and sends real-time push alerts to eligible donors.'
         },
         {
           'q': 'What details are required when creating a blood request?',
-          'a': 'You need to specify the patient name, hospital location, required blood type, unit quantity, and contact person.'
+          'a':
+              'You need to specify the patient name, hospital location, required blood type, unit quantity, and contact person.'
         },
       ]
     },
@@ -66,11 +72,13 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
       'faqs': [
         {
           'q': 'Why do I see alias IDs like Donor #801 in chats?',
-          'a': 'To protect donor privacy, TABANG uses anonymous identifiers in open chat threads until mutual contact agreement is established.'
+          'a':
+              'To protect donor privacy, TABANG uses anonymous identifiers in open chat threads until mutual contact agreement is established.'
         },
         {
           'q': 'What happens when I block a user?',
-          'a': 'Blocked users cannot send or receive messages from you. To prevent abuse, a 48-hour cooldown applies before you can block a user again after unblocking them.'
+          'a':
+              'Blocked users cannot send or receive messages from you. To prevent abuse, a 48-hour cooldown applies before you can block a user again after unblocking them.'
         },
       ]
     },
@@ -85,10 +93,13 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
   @override
   Widget build(BuildContext context) {
     final textColor = widget.isDark ? Colors.white : const Color(0xFF1F1F1F);
-    final subTextColor = widget.isDark ? Colors.white70 : const Color(0xFF666666);
+    final subTextColor =
+        widget.isDark ? Colors.white70 : const Color(0xFF666666);
     final cardBg = widget.isDark ? const Color(0xFF242424) : Colors.white;
-    final listBg = widget.isDark ? const Color(0xFF1C1C1C) : const Color(0xFFF9F9F9);
-    final borderColor = widget.isDark ? const Color(0xFF383838) : const Color(0xFFE5E5E5);
+    final listBg =
+        widget.isDark ? const Color(0xFF1C1C1C) : const Color(0xFFF9F9F9);
+    final borderColor =
+        widget.isDark ? const Color(0xFF383838) : const Color(0xFFE5E5E5);
 
     // Search and Filter logic
     final query = _searchQuery.toLowerCase();
@@ -190,21 +201,25 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
                       onChanged: (val) => setState(() => _searchQuery = val),
                       decoration: InputDecoration(
                         hintText: 'Search help topics, keywords, or rules...',
-                        hintStyle: TextStyle(color: subTextColor.withOpacity(0.7), fontSize: 13),
-                        prefixIcon: const Icon(Icons.search_rounded, color: primaryRed, size: 20),
+                        hintStyle: TextStyle(
+                            color: subTextColor.withOpacity(0.7), fontSize: 13),
+                        prefixIcon: const Icon(Icons.search_rounded,
+                            color: primaryRed, size: 20),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                          icon: Icon(Icons.clear, size: 18, color: subTextColor),
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                              _searchQuery = '';
-                            });
-                          },
-                        )
+                                icon: Icon(Icons.clear,
+                                    size: 18, color: subTextColor),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
                             : null,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 16),
                       ),
                     ),
                   ),
@@ -225,7 +240,8 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
                     selectedColor: primaryRed,
                     backgroundColor: cardBg,
                     labelStyle: TextStyle(
-                      color: _selectedCategory == null ? Colors.white : textColor,
+                      color:
+                          _selectedCategory == null ? Colors.white : textColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -255,7 +271,8 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
                         ),
                         onSelected: (selected) {
                           setState(() {
-                            _selectedCategory = selected ? (cat['title'] as String) : null;
+                            _selectedCategory =
+                                selected ? (cat['title'] as String) : null;
                           });
                         },
                       ),
@@ -301,66 +318,70 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
                 itemCount: matchingFaqs.length,
                 itemBuilder: (context, index) {
                   final faq = matchingFaqs[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
                       color: cardBg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: Theme(
-                      data: Theme.of(context).copyWith(
-                        dividerColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: borderColor),
                       ),
-                      child: ExpansionTile(
-                        iconColor: primaryRed,
-                        collapsedIconColor: subTextColor,
-                        title: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: primaryRed.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                faq['category']!,
-                                style: const TextStyle(
-                                  color: primaryRed,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                      clipBehavior: Clip.antiAlias,
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          dividerColor: Colors.transparent,
+                        ),
+                        child: ExpansionTile(
+                          iconColor: primaryRed,
+                          collapsedIconColor: subTextColor,
+                          title: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: primaryRed.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  faq['category']!,
+                                  style: const TextStyle(
+                                    color: primaryRed,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                faq['q']!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: textColor,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  faq['q']!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  faq['a']!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                    color: subTextColor,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                faq['a']!,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  height: 1.5,
-                                  color: subTextColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   );
@@ -373,13 +394,16 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: widget.isDark ? darkRedAccent.withOpacity(0.4) : primaryRed.withOpacity(0.05),
+                color: widget.isDark
+                    ? darkRedAccent.withOpacity(0.4)
+                    : primaryRed.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: primaryRed.withOpacity(0.2)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.support_agent_rounded, size: 32, color: primaryRed),
+                  const Icon(Icons.support_agent_rounded,
+                      size: 32, color: primaryRed),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -412,10 +436,12 @@ class _AboutHelpPageState extends State<AboutHelpPage> {
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Contact support initiated.')),
+                        const SnackBar(
+                            content: Text('Contact support initiated.')),
                       );
                     },
-                    child: const Text('Contact Us', style: TextStyle(fontSize: 12)),
+                    child: const Text('Contact Us',
+                        style: TextStyle(fontSize: 12)),
                   ),
                 ],
               ),

@@ -14,7 +14,7 @@ class BloodUnit {
   final BloodComponent component;
   final String timeLeft;
   final String storageBay;
-  final String status;
+  String status;
 
   BloodUnit({
     required this.barcode,
@@ -175,46 +175,100 @@ class _BloodBankPageState extends State<BloodBankPage> {
     }
   }
 
-  void _showRequestBloodDialog(BuildContext context, ThemeData theme) {
-    showDialog(
+  Future<void> _showRequestBloodDialog(
+    BuildContext context,
+    ThemeData theme,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    String patientName = '';
+    String hospital = '';
+    String bloodType = '';
+    String units = '';
+
+    await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Submit Blood Request'),
         content: SizedBox(
           width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Fill out the patient details below to broadcast an urgent request to compatible donors and local chapter staff.',
-                style: TextStyle(fontSize: 13),
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enter the patient details for this demo request.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Patient full name',
+                      isDense: true,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Enter the patient name'
+                        : null,
+                    onSaved: (value) => patientName = value!.trim(),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Hospital and ward',
+                      isDense: true,
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Enter the hospital or ward'
+                        : null,
+                    onSaved: (value) => hospital = value!.trim(),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Blood type',
+                      isDense: true,
+                    ),
+                    items: const [
+                      'O-',
+                      'O+',
+                      'A-',
+                      'A+',
+                      'B-',
+                      'B+',
+                      'AB-',
+                      'AB+',
+                    ]
+                        .map((type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            ))
+                        .toList(),
+                    validator: (value) =>
+                        value == null ? 'Select a blood type' : null,
+                    onChanged: (_) {},
+                    onSaved: (value) => bloodType = value!,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Units needed',
+                      isDense: true,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      final count = int.tryParse(value ?? '');
+                      return count == null || count < 1
+                          ? 'Enter at least 1 unit'
+                          : null;
+                    },
+                    onSaved: (value) => units = value!.trim(),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Patient Full Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Hospital Name & Ward',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Units Needed (e.g. 2 bags)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  isDense: true,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         actions: [
@@ -224,9 +278,15 @@ class _BloodBankPageState extends State<BloodBankPage> {
           ),
           ElevatedButton(
             onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              formKey.currentState!.save();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Blood request submitted successfully!')),
+                SnackBar(
+                  content: Text(
+                    '$units unit(s) of $bloodType requested for $patientName at $hospital.',
+                  ),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -240,7 +300,8 @@ class _BloodBankPageState extends State<BloodBankPage> {
     );
   }
 
-  void _showUnitDetailsDialog(BuildContext context, ThemeData theme, BloodUnit unit) {
+  void _showUnitDetailsDialog(
+      BuildContext context, ThemeData theme, BloodUnit unit) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -287,17 +348,21 @@ class _BloodBankPageState extends State<BloodBankPage> {
             child: const Text('Close'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Unit ${unit.barcode} added to your request list.')),
-              );
-            },
+            onPressed: unit.status == 'Available'
+                ? () {
+                    setState(() => unit.status = 'Reserved');
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Unit ${unit.barcode} reserved.')),
+                    );
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE53935),
               foregroundColor: Colors.white,
             ),
-            child: const Text('Reserve / Select Unit'),
+            child:
+                Text(unit.status == 'Available' ? 'Reserve unit' : unit.status),
           ),
         ],
       ),
@@ -310,8 +375,15 @@ class _BloodBankPageState extends State<BloodBankPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6))),
-          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6))),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface)),
         ],
       ),
     );
@@ -326,8 +398,8 @@ class _BloodBankPageState extends State<BloodBankPage> {
     // Filter Logic
     final filteredUnits = _inventory.where((unit) {
       final matchesSearch = unit.barcode
-          .toLowerCase()
-          .contains(_searchQuery.toLowerCase()) ||
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()) ||
           unit.product.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           unit.storageBay.toLowerCase().contains(_searchQuery.toLowerCase());
 
@@ -338,7 +410,7 @@ class _BloodBankPageState extends State<BloodBankPage> {
           _selectedStatus == 'All' || unit.status == _selectedStatus;
 
       final matchesCompatibility =
-      _isCompatible(unit.bloodType, _selectedRecipientType);
+          _isCompatible(unit.bloodType, _selectedRecipientType);
 
       return matchesSearch &&
           matchesComponent &&
@@ -406,24 +478,30 @@ class _BloodBankPageState extends State<BloodBankPage> {
                       const SizedBox(height: 6),
 
                       // Chapter Operating Hours
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 10,
+                        runSpacing: 6,
                         children: [
-                          Icon(
-                            Icons.access_time_outlined,
-                            size: 16,
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.access_time_outlined,
+                                size: 16,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  'Weekdays: 8:00 AM - 8:00 PM; Weekends: 8:00 AM - 5:00 PM',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Weekdays: 8:00 AM – 8:00 PM  •  Weekends: 8:00 AM – 5:00 PM',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color:
-                              theme.colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-
-                          // Live Open/Closed Indicator Badge
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -462,7 +540,8 @@ class _BloodBankPageState extends State<BloodBankPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 12),
                   ),
                 ),
               ],
@@ -631,108 +710,110 @@ class _BloodBankPageState extends State<BloodBankPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: DataTable(
-                  horizontalMargin: 20,
-                  columnSpacing: 24,
-                  headingRowHeight: 48,
-                  dataRowMaxHeight: 52,
-                  headingRowColor: WidgetStateProperty.all(
-                    isDark
-                        ? theme.colorScheme.surface
-                        : Colors.grey.shade50,
-                  ),
-                  columns: [
-                    _headerColumn('Unit Barcode', theme),
-                    _headerColumn('ABO/Rh', theme),
-                    _headerColumn('Product Component', theme),
-                    _headerColumn('Time Left', theme),
-                    _headerColumn('Storage Bay', theme),
-                    _headerColumn('Status', theme),
-                    _headerColumn('', theme),
-                  ],
-                  rows: filteredUnits.map((unit) {
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Text(
-                            unit.barcode,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    horizontalMargin: 20,
+                    columnSpacing: 24,
+                    headingRowHeight: 48,
+                    dataRowMaxHeight: 52,
+                    headingRowColor: WidgetStateProperty.all(
+                      isDark ? theme.colorScheme.surface : Colors.grey.shade50,
+                    ),
+                    columns: [
+                      _headerColumn('Unit Barcode', theme),
+                      _headerColumn('ABO/Rh', theme),
+                      _headerColumn('Product Component', theme),
+                      _headerColumn('Time Left', theme),
+                      _headerColumn('Storage Bay', theme),
+                      _headerColumn('Status', theme),
+                      _headerColumn('', theme),
+                    ],
+                    rows: filteredUnits.map((unit) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              unit.barcode,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            unit.bloodType,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
+                          DataCell(
+                            Text(
+                              unit.bloodType,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            unit.product,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.colorScheme.onSurface
-                                  .withOpacity(0.8),
+                          DataCell(
+                            Text(
+                              unit.product,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.8),
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            unit.timeLeft,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: unit.timeLeft.contains('hours')
-                                  ? Colors.orange.shade700
-                                  : theme.colorScheme.onSurface
-                                  .withOpacity(0.7),
+                          DataCell(
+                            Text(
+                              unit.timeLeft,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: unit.timeLeft.contains('hours')
+                                    ? Colors.orange.shade700
+                                    : theme.colorScheme.onSurface
+                                        .withOpacity(0.7),
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            unit.storageBay,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.colorScheme.onSurface
-                                  .withOpacity(0.7),
+                          DataCell(
+                            Text(
+                              unit.storageBay,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.7),
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(_buildStatusBadge(unit.status)),
-                        DataCell(
-                          InkWell(
-                            onTap: () => _showUnitDetailsDialog(context, theme, unit),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Inspect',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
+                          DataCell(_buildStatusBadge(unit.status)),
+                          DataCell(
+                            InkWell(
+                              onTap: () =>
+                                  _showUnitDetailsDialog(context, theme, unit),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Inspect',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  size: 14,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    size: 14,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
             ),
