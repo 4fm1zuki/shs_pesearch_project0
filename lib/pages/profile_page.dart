@@ -24,7 +24,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurface;
     final cardBg = widget.isDark ? const Color(0xFF242424) : Colors.white;
-    final borderColor = widget.isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0);
+    final borderColor =
+        widget.isDark ? const Color(0xFF383838) : const Color(0xFFE0E0E0);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -57,84 +58,101 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: borderColor),
               ),
-              child: Row(
-                children: [
-                  // Avatar
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF4A1212),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          color: Color(0xFFD32F2F),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 26,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 420;
+                  final identity = Row(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4A1212),
+                          shape: BoxShape.circle,
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-
-                  // Name & Details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'briones.iverson@guest.com',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: textColor.withOpacity(0.6),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD32F2F).withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                        child: Center(
                           child: Text(
-                            'Blood Type: $bloodType',
+                            initials,
                             style: const TextStyle(
                               color: Color(0xFFD32F2F),
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 26,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  // Edit Button
-                  OutlinedButton.icon(
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'briones.iverson@guest.com',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: textColor.withOpacity(0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color:
+                                    const Color(0xFFD32F2F).withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Blood Type: $bloodType',
+                                style: const TextStyle(
+                                  color: Color(0xFFD32F2F),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                  final editButton = OutlinedButton.icon(
                     onPressed: _openEditModal,
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     label: const Text('Edit Profile'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: textColor,
                       side: BorderSide(color: borderColor),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
                     ),
-                  ),
-                ],
+                  );
+
+                  return Flex(
+                    direction: isCompact ? Axis.vertical : Axis.horizontal,
+                    crossAxisAlignment: isCompact
+                        ? CrossAxisAlignment.stretch
+                        : CrossAxisAlignment.center,
+                    children: [
+                      if (isCompact) identity else Expanded(child: identity),
+                      if (isCompact) const SizedBox(height: 16),
+                      if (isCompact)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: editButton,
+                        )
+                      else
+                        editButton,
+                    ],
+                  );
+                },
               ),
             ),
 
@@ -145,11 +163,24 @@ class _ProfilePageState extends State<ProfilePage> {
             // ==========================================
             Row(
               children: [
-                _buildStatCard('Total Donations', '4', Icons.volunteer_activism, cardBg, borderColor, textColor),
+                _buildStatCard('Total Donations', '4', Icons.volunteer_activism,
+                    cardBg, borderColor, textColor),
                 const SizedBox(width: 16),
-                _buildStatCard('Last Donated', 'Aug 14, 2025', Icons.calendar_today_outlined, cardBg, borderColor, textColor),
+                _buildStatCard(
+                    'Last Donated',
+                    'Aug 14, 2025',
+                    Icons.calendar_today_outlined,
+                    cardBg,
+                    borderColor,
+                    textColor),
                 const SizedBox(width: 16),
-                _buildStatCard('Status', isAvailableForDonation ? 'Eligible' : 'Unavailable', Icons.verified_user_outlined, cardBg, borderColor, textColor),
+                _buildStatCard(
+                    'Status',
+                    isAvailableForDonation ? 'Eligible' : 'Unavailable',
+                    Icons.verified_user_outlined,
+                    cardBg,
+                    borderColor,
+                    textColor),
               ],
             ),
 
@@ -160,20 +191,35 @@ class _ProfilePageState extends State<ProfilePage> {
             // ==========================================
             _buildSectionTitle('Contact & Location Details', textColor),
             const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: cardBg,
+            Material(
+              color: cardBg,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
+                side: BorderSide(color: borderColor),
               ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                  _buildListTile(Icons.phone_outlined, 'Contact Number', phone, textColor, borderColor),
-                  _buildListTile(Icons.location_on_outlined, 'Barangay / Location', '$barangay, Digos City', textColor, borderColor),
+                  _buildListTile(Icons.phone_outlined, 'Contact Number', phone,
+                      textColor, borderColor),
+                  _buildListTile(
+                      Icons.location_on_outlined,
+                      'Barangay / Location',
+                      '$barangay, Digos City',
+                      textColor,
+                      borderColor),
                   SwitchListTile(
-                    secondary: Icon(Icons.event_available_outlined, color: textColor.withOpacity(0.7)),
-                    title: Text('Available for Emergency Donation', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor)),
-                    subtitle: Text('Allow nearby hospitals to see your donor availability', style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.55))),
+                    secondary: Icon(Icons.event_available_outlined,
+                        color: textColor.withOpacity(0.7)),
+                    title: Text('Available for Emergency Donation',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: textColor)),
+                    subtitle: Text(
+                        'Allow nearby hospitals to see your donor availability',
+                        style: TextStyle(
+                            fontSize: 12, color: textColor.withOpacity(0.55))),
                     value: isAvailableForDonation,
                     activeColor: const Color(0xFFD32F2F),
                     onChanged: (val) {
@@ -193,31 +239,40 @@ class _ProfilePageState extends State<ProfilePage> {
             // ==========================================
             _buildSectionTitle('Account Actions', textColor),
             const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: cardBg,
+            Material(
+              color: cardBg,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
+                side: BorderSide(color: borderColor),
               ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
-                    title: Text('Edit Profile Details', style: TextStyle(color: textColor, fontSize: 14)),
+                    leading: const Icon(Icons.edit_outlined,
+                        color: Colors.blueAccent),
+                    title: Text('Edit Profile Details',
+                        style: TextStyle(color: textColor, fontSize: 14)),
                     trailing: const Icon(Icons.chevron_right, size: 20),
                     onTap: _openEditModal,
                   ),
                   Divider(height: 1, color: borderColor),
                   ListTile(
-                    leading: const Icon(Icons.lock_outline, color: Colors.orangeAccent),
-                    title: Text('Change Password', style: TextStyle(color: textColor, fontSize: 14)),
+                    leading: const Icon(Icons.lock_outline,
+                        color: Colors.orangeAccent),
+                    title: Text('Change Password',
+                        style: TextStyle(color: textColor, fontSize: 14)),
                     trailing: const Icon(Icons.chevron_right, size: 20),
                     onTap: () {},
                   ),
                   Divider(height: 1, color: borderColor),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.redAccent),
-                    title: const Text('Sign Out', style: TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
+                    title: const Text('Sign Out',
+                        style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold)),
                     onTap: () {},
                   ),
                 ],
@@ -268,7 +323,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color bg, Color border, Color textColor) {
+  Widget _buildStatCard(String label, String value, IconData icon, Color bg,
+      Color border, Color textColor) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -282,22 +338,33 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Icon(icon, size: 20, color: const Color(0xFFD32F2F)),
             const SizedBox(height: 12),
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: textColor)),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.55))),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 12, color: textColor.withOpacity(0.55))),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildListTile(IconData icon, String title, String subtitle, Color textColor, Color borderColor) {
+  Widget _buildListTile(IconData icon, String title, String subtitle,
+      Color textColor, Color borderColor) {
     return Column(
       children: [
         ListTile(
           leading: Icon(icon, color: textColor.withOpacity(0.7)),
-          title: Text(title, style: TextStyle(fontSize: 11, color: textColor.withOpacity(0.55))),
-          subtitle: Text(subtitle, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor)),
+          title: Text(title,
+              style:
+                  TextStyle(fontSize: 11, color: textColor.withOpacity(0.55))),
+          subtitle: Text(subtitle,
+              style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w500, color: textColor)),
         ),
         Divider(height: 1, color: borderColor),
       ],

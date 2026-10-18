@@ -4,12 +4,14 @@ class SlidePanel extends StatelessWidget {
   final bool isOpen;
   final VoidCallback onClose;
   final List<Map<String, String>> donors;
+  final ValueChanged<Map<String, String>> onContact;
 
   const SlidePanel({
     super.key,
     required this.isOpen,
     required this.onClose,
     required this.donors,
+    required this.onContact,
   });
 
   @override
@@ -18,7 +20,8 @@ class SlidePanel extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final panelBg = isDark ? const Color(0xFF232323) : const Color(0xFFE8E8E8);
-    final borderColor = isDark ? const Color(0xFF444444) : const Color(0xFFCCCCCC);
+    final borderColor =
+        isDark ? const Color(0xFF444444) : const Color(0xFFCCCCCC);
     final titleColor = isDark ? Colors.grey.shade300 : const Color(0xFF555555);
 
     return AnimatedPositioned(
@@ -26,7 +29,8 @@ class SlidePanel extends StatelessWidget {
       curve: Curves.easeOutCubic,
       top: 20,
       bottom: 20,
-      right: isOpen ? 25 : -360, // SLIDES IN/OUT VIA POSITIONED ABSOLUTE OVERLAY
+      right:
+          isOpen ? 25 : -360, // SLIDES IN/OUT VIA POSITIONED ABSOLUTE OVERLAY
       width: 330,
       child: Container(
         decoration: BoxDecoration(
@@ -73,14 +77,45 @@ class SlidePanel extends StatelessWidget {
 
             // DONOR CARDS LIST
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                itemCount: donors.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  return _buildDonorCard(donors[index], isDark);
-                },
-              ),
+              child: donors.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.person_search_outlined,
+                              size: 36,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No matching donors',
+                              style: theme.textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Try another barangay or blood type.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      itemCount: donors.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        return _buildDonorCard(donors[index], isDark);
+                      },
+                    ),
             ),
           ],
         ),
@@ -90,8 +125,10 @@ class SlidePanel extends StatelessWidget {
 
   Widget _buildDonorCard(Map<String, String> donor, bool isDark) {
     final cardBg = isDark ? const Color(0xFF333333) : const Color(0xFFDCDCDC);
-    final cardBorder = isDark ? const Color(0xFF4A4A4A) : const Color(0xFFC0C0C0);
-    final headingColor = isDark ? Colors.grey.shade200 : const Color(0xFF444444);
+    final cardBorder =
+        isDark ? const Color(0xFF4A4A4A) : const Color(0xFFC0C0C0);
+    final headingColor =
+        isDark ? Colors.grey.shade200 : const Color(0xFF444444);
     final bodyColor = isDark ? Colors.grey.shade400 : const Color(0xFF555555);
 
     return Container(
@@ -131,16 +168,21 @@ class SlidePanel extends StatelessWidget {
             child: SizedBox(
               height: 28,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => onContact(donor),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? const Color(0xFF222222) : const Color(0xFFF0F0F0),
-                  foregroundColor: isDark ? Colors.grey.shade300 : const Color(0xFF333333),
+                  backgroundColor: isDark
+                      ? const Color(0xFF222222)
+                      : const Color(0xFFF0F0F0),
+                  foregroundColor:
+                      isDark ? Colors.grey.shade300 : const Color(0xFF333333),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                     side: BorderSide(
-                      color: isDark ? const Color(0xFF555555) : const Color(0xFFB0B0B0),
+                      color: isDark
+                          ? const Color(0xFF555555)
+                          : const Color(0xFFB0B0B0),
                     ),
                   ),
                 ),
